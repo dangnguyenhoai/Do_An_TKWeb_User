@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chat Box The Coffee House</title>
+    <link rel="shortcut icon" href="//theme.hstatic.net/1000075078/1001099126/14/favicon.png?v=284" type="image/png">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background: #f5f5f5;
+        font-family: "Segoe UI", sans-serif;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .chat-box {
+        width: 100%;
+        max-width: 500px;
+        height: 85vh;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 3px solid #ff9a00;
+      }
+
+      .chat-header {
+        background: #ff9a00;
+        color: white;
+        padding: 15px;
+        font-size: 20px;
+        text-align: center;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .chat-header i {
+        font-size: 22px;
+      }
+
+      .chat-messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: #fefefe;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .message {
+        padding: 12px 18px;
+        border-radius: 20px;
+        max-width: 75%;
+        font-size: 15px;
+        word-wrap: break-word;
+      }
+
+      .message.user {
+        background-color: #dcf8c6;
+        align-self: flex-end;
+        border-bottom-right-radius: 0;
+      }
+
+      .message.bot {
+        background-color: #eee;
+        align-self: flex-start;
+        border-bottom-left-radius: 0;
+      }
+
+      .chat-input {
+        padding: 15px;
+        border-top: 1px solid #ddd;
+        background-color: #fff;
+      }
+
+      .chat-input .form-control {
+        border-radius: 30px;
+        padding: 10px 20px;
+        border: 1px solid #ccc;
+      }
+
+      .chat-input .btn {
+        border-radius: 30px;
+        padding: 10px 20px;
+        background-color: #ff9a00;
+        border: none;
+      }
+
+      .chat-input .btn:hover {
+        background-color: #e88b00;
+      }
+
+      #floatingText {
+        position: fixed;
+        top: 0;
+        left: 0;
+        font-size: 48px;
+        font-weight: bold;
+        color: #ff9a00;
+        user-select: none;
+        pointer-events: none;
+        white-space: nowrap;
+        z-index: 9999;
+        text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="floatingText">The Coffee House</div>
+    <div class="chat-box">
+      <div class="chat-header">
+        <i class="fas fa-mug-hot"></i> Chat với The Coffee House
+      </div>
+
+      <div class="chat-messages" id="chatMessages">
+        <!-- Nội dung chat sẽ được thêm ở đây -->
+      </div>
+
+      <div class="chat-input">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            id="chatInput"
+            placeholder="Nhập tin nhắn của bạn..."
+          />
+          <button class="btn btn-warning text-white" id="sendBtn">Gửi</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const chatMessages = document.getElementById("chatMessages");
+      const chatInput = document.getElementById("chatInput");
+      const sendBtn = document.getElementById("sendBtn");
+
+      window.onload = () => {
+        const history = sessionStorage.getItem("chatHistory");
+        if (history) {
+          chatMessages.innerHTML = history;
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        } else {
+          addBotMessage(
+            "☕ Xin chào bạn! The Coffee House có thể giúp gì cho bạn hôm nay?"
+          );
+        }
+      };
+
+      function sendMessage(text) {
+        if (!text.trim()) return;
+
+        const userMsg = document.createElement("div");
+        userMsg.className = "message user";
+        userMsg.textContent = text;
+        chatMessages.appendChild(userMsg);
+
+        const botMsg = document.createElement("div");
+        botMsg.className = "message bot";
+        botMsg.textContent = '☕ Bạn vừa nói: "' + text + '"';
+
+        setTimeout(() => {
+          chatMessages.appendChild(botMsg);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          saveChat();
+        }, 600);
+
+        chatInput.value = "";
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        saveChat();
+      }
+
+      function addBotMessage(text) {
+        const botMsg = document.createElement("div");
+        botMsg.className = "message bot";
+        botMsg.textContent = text;
+        chatMessages.appendChild(botMsg);
+        saveChat();
+      }
+
+      function saveChat() {
+        sessionStorage.setItem("chatHistory", chatMessages.innerHTML);
+      }
+
+      sendBtn.addEventListener("click", () => sendMessage(chatInput.value));
+      chatInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMessage(chatInput.value);
+      });
+    </script>
+
+    <script>
+      const floatingText = document.getElementById("floatingText");
+
+      const topLimit = 20;
+      const bottomLimit = window.innerHeight - floatingText.offsetHeight - 20;
+      let goingDown = true;
+      let posY = topLimit;
+
+      let side = "left";
+
+      function move() {
+        if (goingDown) {
+          posY += 5;
+          if (posY >= bottomLimit) goingDown = false;
+        } else {
+          posY -= 5;
+          if (posY <= topLimit) goingDown = true;
+        }
+
+        const posX =
+          side === "left"
+            ? 20
+            : window.innerWidth - floatingText.offsetWidth - 20;
+
+        floatingText.style.top = posY + "px";
+        floatingText.style.left = posX + "px";
+      }
+
+      const interval = setInterval(() => {
+        move();
+      }, 30);
+
+      setInterval(() => {
+        side = side === "left" ? "right" : "left";
+      }, 8000);
+    </script>
+  </body>
+</html>
